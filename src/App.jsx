@@ -665,20 +665,20 @@ function App() {
 
       const activeReservations = Array.isArray(remoteReservations)
         ? remoteReservations.filter((reservation) => {
-            if (!reservation?.locationId || !reservation?.seatId) {
-              return false;
-            }
+          if (!reservation?.locationId || !reservation?.seatId) {
+            return false;
+          }
 
-            if (
-              reservation.status !== "reserved" &&
-              reservation.status !== "checked_in"
-            ) {
-              return false;
-            }
+          if (
+            reservation.status !== "reserved" &&
+            reservation.status !== "checked_in"
+          ) {
+            return false;
+          }
 
-            const endTimeMs = Number(reservation.endTimeMs ?? 0);
-            return !(endTimeMs > 0 && endTimeMs <= nowMs);
-          })
+          const endTimeMs = Number(reservation.endTimeMs ?? 0);
+          return !(endTimeMs > 0 && endTimeMs <= nowMs);
+        })
         : [];
 
       activeReservations.forEach((reservation) => {
@@ -690,12 +690,12 @@ function App() {
         next[locationId] = next[locationId].map((seat) =>
           seat.id === seatId
             ? {
-                ...seat,
-                status:
-                  reservation.status === "checked_in"
-                    ? "occupied"
-                    : "reserved",
-              }
+              ...seat,
+              status:
+                reservation.status === "checked_in"
+                  ? "occupied"
+                  : "reserved",
+            }
             : seat,
         );
       });
@@ -719,12 +719,12 @@ function App() {
           next[booking.location.id] = locationSeats.map((seat) =>
             seat.id === booking.seat.id
               ? {
-                  ...seat,
-                  status:
-                    booking.status === "checked_in"
-                      ? "occupied"
-                      : "reserved",
-                }
+                ...seat,
+                status:
+                  booking.status === "checked_in"
+                    ? "occupied"
+                    : "reserved",
+              }
               : seat,
           );
         }
@@ -1086,17 +1086,17 @@ function App() {
       const nowMs = Date.now();
       const activeRemoteReservations = Array.isArray(remoteReservations)
         ? remoteReservations.filter((reservation) => {
-            if (
-              reservation?.locationId !== space.id ||
-              (reservation.status !== "reserved" &&
-                reservation.status !== "checked_in")
-            ) {
-              return false;
-            }
+          if (
+            reservation?.locationId !== space.id ||
+            (reservation.status !== "reserved" &&
+              reservation.status !== "checked_in")
+          ) {
+            return false;
+          }
 
-            const endTimeMs = Number(reservation.endTimeMs ?? 0);
-            return !endTimeMs || endTimeMs > nowMs;
-          })
+          const endTimeMs = Number(reservation.endTimeMs ?? 0);
+          return !endTimeMs || endTimeMs > nowMs;
+        })
         : [];
 
       const remoteOccupiedCount = activeRemoteReservations.reduce(
@@ -1106,15 +1106,15 @@ function App() {
 
       const localOccupiedCount = Array.isArray(localSeats)
         ? localSeats.filter(
-            (seat) =>
-              seat.status === "occupied" ||
-              seat.status === "reserved",
-          ).length
+          (seat) =>
+            seat.status === "occupied" ||
+            seat.status === "reserved",
+        ).length
         : 0;
 
       const currentOccupancy =
         remoteOccupiedCount > 0 ||
-        Array.isArray(remoteReservations)
+          Array.isArray(remoteReservations)
           ? remoteOccupiedCount
           : localOccupiedCount || Number(space.currentOccupancy ?? 0);
 
@@ -1442,11 +1442,11 @@ function App() {
 
     const localConflict =
       booking &&
-      (booking.status === "reserved" || booking.status === "checked_in") &&
-      booking.location?.id === selectedLocation.id &&
-      booking.seat?.id === selectedSeat.id &&
-      Number(booking.endTimeMs ?? 0) > startTimeMs &&
-      Number(booking.startTimeMs ?? 0) < endTimeMs
+        (booking.status === "reserved" || booking.status === "checked_in") &&
+        booking.location?.id === selectedLocation.id &&
+        booking.seat?.id === selectedSeat.id &&
+        Number(booking.endTimeMs ?? 0) > startTimeMs &&
+        Number(booking.startTimeMs ?? 0) < endTimeMs
         ? booking
         : null;
 
@@ -1812,11 +1812,10 @@ function App() {
               className="avatar"
               title={
                 firebaseUser
-                  ? `Signed in as ${
-                      firebaseUser.displayName ||
-                      firebaseUser.email ||
-                      "SRMIST Student"
-                    }`
+                  ? `Signed in as ${firebaseUser.displayName ||
+                  firebaseUser.email ||
+                  "SRMIST Student"
+                  }`
                   : "Open StudySpot account"
               }
               onClick={() => setProfileMenuOpen((value) => !value)}
@@ -1831,12 +1830,12 @@ function App() {
             >
               {firebaseUser?.displayName
                 ? firebaseUser.displayName
-                    .split(" ")
-                    .filter(Boolean)
-                    .slice(0, 2)
-                    .map((part) => part[0])
-                    .join("")
-                    .toUpperCase()
+                  .split(" ")
+                  .filter(Boolean)
+                  .slice(0, 2)
+                  .map((part) => part[0])
+                  .join("")
+                  .toUpperCase()
                 : "GM"}
             </button>
 
@@ -2352,15 +2351,14 @@ function Dashboard({
             </div>
 
             <span
-              className={`status-pill ${
-                isActiveSession
+              className={`status-pill ${isActiveSession
                   ? "checked_in"
                   : isCheckInOpen
                     ? "checkin_open"
                     : isUpcoming
                       ? "reserved"
                       : booking.status
-              }`}
+                }`}
             >
               {isActiveSession
                 ? "Active Session"
@@ -2967,11 +2965,11 @@ function SeatSelection({
 
       const localConflict =
         booking &&
-        (booking.status === "reserved" || booking.status === "checked_in") &&
-        booking.location?.id === location.id &&
-        booking.seat?.id === seat.id &&
-        Number(booking.endTimeMs ?? 0) > startTimeMs &&
-        Number(booking.startTimeMs ?? 0) < endTimeMs
+          (booking.status === "reserved" || booking.status === "checked_in") &&
+          booking.location?.id === location.id &&
+          booking.seat?.id === seat.id &&
+          Number(booking.endTimeMs ?? 0) > startTimeMs &&
+          Number(booking.startTimeMs ?? 0) < endTimeMs
           ? booking
           : null;
 
@@ -3700,9 +3698,8 @@ function Credits({ credits, lockedCredits, transactions }) {
           {transactions.map((tx) => (
             <div key={tx.id} className="transaction">
               <div
-                className={`transaction-icon ${
-                  tx.type === "positive" ? "positive" : "negative"
-                }`}
+                className={`transaction-icon ${tx.type === "positive" ? "positive" : "negative"
+                  }`}
               >
                 {tx.type === "positive" ? (
                   <Check size={17} />
@@ -3717,9 +3714,8 @@ function Credits({ credits, lockedCredits, transactions }) {
               </div>
 
               <strong
-                className={`amount ${
-                  tx.type === "positive" ? "positive-text" : "negative-text"
-                }`}
+                className={`amount ${tx.type === "positive" ? "positive-text" : "negative-text"
+                  }`}
               >
                 {tx.type === "positive" ? `+${tx.amount}` : `${tx.amount}`}
               </strong>
