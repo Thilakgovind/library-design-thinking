@@ -176,6 +176,7 @@ export const seedStudySpacesIfEmpty = async (spaces) => {
  * A6 becomes unavailable
  */
 export const subscribeToAllReservations = (callback) => {
+  console.log("DIAGNOSTIC: 1. subscribeToAllReservations() started in firestore.js");
   const reservationsRef = collection(
     db,
     COLLECTIONS.RESERVATIONS,
@@ -184,14 +185,20 @@ export const subscribeToAllReservations = (callback) => {
   return onSnapshot(
     reservationsRef,
     (snapshot) => {
+      console.log(`DIAGNOSTIC: 2. onSnapshot fired. Total docs in snapshot: ${snapshot.docs.length}`);
       const reservations =
         snapshot.docs.map(
-          (docSnap) => ({
-            id: docSnap.id,
-            ...docSnap.data(),
-          }),
+          (docSnap) => {
+            const data = docSnap.data();
+            console.log(`DIAGNOSTIC: 4. Reservation parsed from snapshot: ID=${docSnap.id}, seatId=${data.seatId}, status=${data.status}`);
+            return {
+              id: docSnap.id,
+              ...data,
+            };
+          }
         );
 
+      console.log(`DIAGNOSTIC: 3. Number of reservations received from snapshot: ${reservations.length}`);
       callback(reservations);
     },
     (error) => {
@@ -280,7 +287,7 @@ export const createFirestoreReservation = async (
       );
 
       const snapshot =
-        await transaction.get(
+        await getDocs(
           locationQuery,
         );
 
@@ -820,7 +827,7 @@ export const updateUserCredits =
       userId,
     );
 
-    await updateDoc(
+    await setDoc(
       userRef,
       {
         credits,
@@ -828,6 +835,7 @@ export const updateUserCredits =
         updatedAt:
           serverTimestamp(),
       },
+      { merge: true }
     );
   };
 

@@ -191,43 +191,39 @@ function getSeatReservationConflict(
   if (!Array.isArray(reservations)) return null;
 
   const nowMs = Date.now();
+  const requestedLocationId = String(locationId ?? "");
+  const requestedSeatId = String(seatId ?? "");
 
-  return (
-    reservations.find((reservation) => {
-      if (!reservation) return false;
+  const conflict = reservations.find((reservation) => {
+    if (!reservation) return false;
 
-      // Must match seat
-      const reservedLocationId = reservation.locationId ?? reservation.location?.id;
-      const reservedSeatId = reservation.seatId ?? reservation.seat?.id;
+    const reservedLocationId = String(reservation.locationId ?? reservation.location?.id ?? "");
+    const reservedSeatId = String(reservation.seatId ?? reservation.seat?.id ?? "");
 
-      if (reservedLocationId !== locationId || reservedSeatId !== seatId) {
-        return false;
-      }
+    if (reservedLocationId !== requestedLocationId || reservedSeatId !== requestedSeatId) {
+      return false;
+    }
 
-      // Must be an active status
-      if (
-        reservation.status !== "reserved" &&
-        reservation.status !== "checked_in"
-      ) {
-        return false;
-      }
+    const status = String(reservation.status ?? "").toLowerCase();
+    if (status !== "reserved" && status !== "checked_in") {
+      return false;
+    }
 
-      // Check if the existing reservation has already expired
-      const existingEndMs = Number(reservation.endTimeMs ?? 0);
-      if (existingEndMs > 0 && existingEndMs <= nowMs) {
-        return false;
-      }
+    const existingStartMs = Number(reservation.startTimeMs ?? 0);
+    const existingEndMs = Number(reservation.endTimeMs ?? 0);
 
-      // Check time-window overlap
-      const existingStartMs = Number(reservation.startTimeMs ?? 0);
-      if (!existingStartMs || !existingEndMs) {
-        // Malformed but active → conservatively treat as conflict
-        return true;
-      }
+    if (existingEndMs > 0 && existingEndMs <= nowMs) {
+      return false;
+    }
 
-      return startTimeMs < existingEndMs && endTimeMs > existingStartMs;
-    }) ?? null
-  );
+    if (!existingStartMs || !existingEndMs) {
+      return true;
+    }
+
+    return startTimeMs < existingEndMs && endTimeMs > existingStartMs;
+  }) ?? null;
+
+  return conflict;
 }
 
 /**
@@ -920,6 +916,7 @@ function App() {
 
     const unsubscribeReservations = subscribeToAllReservations(
       (reservations) => {
+        console.log(`DIAGNOSTIC: 5. App.jsx received callback with ${reservations?.length} reservations`);
         setRemoteReservations(
           Array.isArray(reservations) ? reservations : [],
         );
@@ -938,6 +935,10 @@ function App() {
       }
     };
   }, [firebaseUser]);
+
+  useEffect(() => {
+    console.log(`DIAGNOSTIC: 6. remoteReservations state updated. Current length: ${remoteReservations.length}`);
+  }, [remoteReservations]);
 
   // Keep study-space metadata synchronized with Firestore as well.
   useEffect(() => {
@@ -2963,13 +2964,18 @@ function SeatSelection({
         endTimeMs,
       );
 
+      const requestedLocationId = String(location.id ?? "");
+      const requestedSeatId = String(seat.id ?? "");
+      const bookingLocationId = String(booking?.location?.id ?? booking?.locationId ?? "");
+      const bookingSeatId = String(booking?.seat?.id ?? booking?.seatId ?? "");
+
       const localConflict =
         booking &&
-          (booking.status === "reserved" || booking.status === "checked_in") &&
-          booking.location?.id === location.id &&
-          booking.seat?.id === seat.id &&
-          Number(booking.endTimeMs ?? 0) > startTimeMs &&
-          Number(booking.startTimeMs ?? 0) < endTimeMs
+        (booking.status === "reserved" || booking.status === "checked_in") &&
+        bookingLocationId === requestedLocationId &&
+        bookingSeatId === requestedSeatId &&
+        Number(booking.endTimeMs ?? 0) > startTimeMs &&
+        Number(booking.startTimeMs ?? 0) < endTimeMs
           ? booking
           : null;
 
