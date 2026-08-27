@@ -1,0 +1,113 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =========================================================
+    // STUDY SPACES
+    // =========================================================
+    // All authenticated users can view study-space information.
+    // Study-space configuration is not editable by students.
+    match /studySpaces/{spaceId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+
+
+    // =========================================================
+    // USERS
+    // =========================================================
+    // A student can read and update ONLY their own profile.
+    //
+    // NOTE:
+    // For this zero-cost prototype, credits are stored directly
+    // in the user's Firestore document. This is NOT secure enough
+    // for production because the client can modify its own credits.
+    //
+    // Production version should move credit mutations to
+    // Cloud Functions / server-side transactions.
+    match /users/{userId} {
+
+      allow read: if request.auth != null
+                  && request.auth.uid == userId;
+
+      allow create: if request.auth != null
+                    && request.auth.uid == userId;
+
+      allow update: if request.auth != null
+                    && request.auth.uid == userId;
+
+      allow delete: if false;
+    }
+
+
+    // =========================================================
+    // RESERVATIONS
+    // =========================================================
+    // ALL authenticated users must be able to READ reservations.
+    //
+    // This is important because the seat map needs to know that
+    // another student has already booked a particular seat.
+    //
+    // Students may create/update/delete only reservations that
+    // belong to themselves.
+    match /reservations/{reservationId} {
+
+      allow read: if request.auth != null;
+
+      allow create: if request.auth != null
+                    && request.resource.data.userId == request.auth.uid;
+
+      allow update: if request.auth != null
+                    && resource.data.userId == request.auth.uid
+                    && request.resource.data.userId == request.auth.uid;
+
+      allow delete: if request.auth != null
+                    && resource.data.userId == request.auth.uid;
+    }
+
+
+    // =========================================================
+    // CREDIT TRANSACTIONS
+    // =========================================================
+    // Each student can access only their own transaction history.
+    match /creditTransactions/{transactionId} {
+
+      allow read: if request.auth != null
+                  && resource.data.userId == request.auth.uid;
+
+      allow create: if request.auth != null
+                    && request.resource.data.userId == request.auth.uid;
+
+      allow update: if request.auth != null
+                    && resource.data.userId == request.auth.uid
+                    && request.resource.data.userId == request.auth.uid;
+
+      allow delete: if false;
+    }
+
+
+    // =========================================================
+    // OCCUPANCY
+    // =========================================================
+    // Keep this locked for now unless the application actually
+    // needs client-side occupancy writes.
+    match /occupancy/{spaceId} {
+
+      allow read: if request.auth != null;
+
+      allow write: if false;
+    }
+
+
+    // =========================================================
+    // SEAT SCHEDULES
+    // =========================================================
+    // Reserved for server-side atomic booking logic.
+    // The current client does not need direct access.
+    match /seatSchedules/{scheduleId} {
+
+      allow read, write: if false;
+    }
+  }
+}
